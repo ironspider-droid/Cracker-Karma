@@ -1,22 +1,55 @@
 'use server';
 
-import { analyzeCrackerPollution, type AnalyzeCrackerPollutionInput, type AnalyzeCrackerPollutionOutput } from '@/ai/flows/analyze-cracker-pollution';
-
 export type ServerActionResult = {
   success: true;
-  data: AnalyzeCrackerPollutionOutput;
+  data: {
+    aqi: number;
+    city: string;
+    recommendation: string;
+  };
 } | {
   success: false;
   error: string;
 }
 
-export async function analyzeCrackerImage(input: AnalyzeCrackerPollutionInput): Promise<ServerActionResult> {
+export async function getAirQuality(city: string): Promise<ServerActionResult> {
   try {
-    const result = await analyzeCrackerPollution(input);
-    return { success: true, data: result };
+    const token = process.env.WAQI_TOKEN;
+    if (!token) {
+      // This is a server-side check, so we can throw an error.
+      throw new Error("WAQI API token is not configured.");
+    }
+    
+    const response = await fetch(`https://api.waqi.info/feed/${city}/?token=${token}`);
+    const data = await response.json();
+
+    if (data.status === "ok") {
+      const aqi = data.data.aqi;
+      let recommendation;
+      if (aqi > 150) {
+        recommendation = `The air quality is unhealthy (${aqi} AQI). It's not a good time for firecrackers. Consider a significant budget reduction.`;
+      } else if (aqi > 100) {
+        recommendation = `The air quality is moderately unhealthy (${aqi} AQI). Be mindful of your cracker usage. A small budget reduction is advised.`;
+      } else {
+        recommendation = `The air quality is good (${aqi} AQI). Enjoy your celebrations responsibly! No budget adjustment needed.`;
+      }
+
+      return { 
+        success: true, 
+        data: {
+          aqi: aqi,
+          city: data.data.city.name,
+          recommendation: recommendation,
+        }
+      };
+    } else {
+      return { success: false, error: data.data || "Could not retrieve air quality data." };
+    }
   } catch (error) {
-    console.error("Error analyzing cracker image:", error);
-    // Return a generic error message to the client for security
-    return { success: false, error: "Failed to analyze the cracker image. Please try again later." };
+    console.error("Error fetching air quality data:", error);
+    if (error instanceof Error) {
+        return { success: false, error: error.message };
+    }
+    return { success: false, error: "An unknown error occurred while fetching air quality data." };
   }
 }
