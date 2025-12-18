@@ -27,11 +27,11 @@ export async function getAirQuality(city: string): Promise<ServerActionResult> {
       const aqi = data.data.aqi;
       let recommendation;
       if (aqi > 150) {
-        recommendation = `The air quality is unhealthy (${aqi} AQI). It's not a good time for firecrackers. Consider a significant budget reduction.`;
+        recommendation = `The air quality is unhealthy (${aqi} AQI). It's not a good time for firecrackers.`;
       } else if (aqi > 100) {
-        recommendation = `The air quality is moderately unhealthy (${aqi} AQI). Be mindful of your cracker usage. A small budget reduction is advised.`;
+        recommendation = `The air quality is moderately unhealthy (${aqi} AQI). Be mindful of your cracker usage.`;
       } else {
-        recommendation = `The air quality is good (${aqi} AQI). Enjoy your celebrations responsibly! No budget adjustment needed.`;
+        recommendation = `The air quality is good (${aqi} AQI). Enjoy your celebrations responsibly!`;
       }
 
       return { 
