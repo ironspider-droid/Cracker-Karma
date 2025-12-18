@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Loader2, Wand2, AlertTriangle, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ type CrackerAnalysisProps = {
 };
 
 export default function CrackerAnalysis({ onAnalysisComplete }: CrackerAnalysisProps) {
-  const [location, setLocation] = useState<string>("");
+  const [location, setLocation] = useState<string>("Delhi");
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);

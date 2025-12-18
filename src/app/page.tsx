@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Sparkles, Leaf } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import BudgetDisplay from "@/components/cracker-karma/BudgetDisplay";
-import CrackerAnalysis, { type AnalysisResult } from "@/components/cracker-karma/CrackerAnalysis";
+import CrackerAnalysis, { type AnalysisResult as AqiAnalysisResult } from "@/components/cracker-karma/CrackerAnalysis";
+import CrackerScanner, { type CrackerAnalysisResult } from "@/components/cracker-karma/CrackerScanner";
 import ActivityTracker from "@/components/cracker-karma/ActivityTracker";
 import EcoActions from "@/components/cracker-karma/EcoActions";
 import CrackerGuide from "@/components/cracker-karma/CrackerGuide";
@@ -25,8 +26,12 @@ export default function Home() {
     });
   };
 
-  const handleAnalysisComplete = (result: AnalysisResult, adjustment: number) => {
-    handleBudgetUpdate(adjustment, "Cracker Analyzed!");
+  const handleAqiAnalysisComplete = (result: AqiAnalysisResult, adjustment: number) => {
+    handleBudgetUpdate(adjustment, "Air Quality Analyzed!");
+  };
+
+  const handleCrackerAnalysisComplete = (result: CrackerAnalysisResult) => {
+    handleBudgetUpdate(result.pollutionPoints, `Cracker Analyzed: ${result.crackerName}`);
   };
 
   return (
@@ -48,7 +53,8 @@ export default function Home() {
         <div className="grid gap-8 grid-cols-1 lg:grid-cols-3 items-start">
           <div className="lg:col-span-2 space-y-8">
             <BudgetDisplay budget={budget} />
-            <CrackerAnalysis onAnalysisComplete={handleAnalysisComplete} />
+            <CrackerAnalysis onAnalysisComplete={handleAqiAnalysisComplete} />
+            <CrackerScanner onAnalysisComplete={handleCrackerAnalysisComplete} />
           </div>
           <div className="space-y-8">
             <ActivityTracker />
