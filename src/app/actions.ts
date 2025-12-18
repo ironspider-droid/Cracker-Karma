@@ -34,11 +34,14 @@ export async function getAirQuality(city: string): Promise<ServerActionResult> {
         recommendation = `The air quality is good (${aqi} AQI). Enjoy your celebrations responsibly!`;
       }
 
+      // Correctly extract the city name from the nested response data
+      const cityName = data.data.city?.name || city;
+
       return { 
         success: true, 
         data: {
           aqi: aqi,
-          city: data.data.city.name,
+          city: cityName,
           recommendation: recommendation,
         }
       };
