@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Leaf, LogOut } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Leaf, LogOut, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import BudgetDisplay from "@/components/cracker-karma/BudgetDisplay";
 import CrackerAnalysis from "@/components/cracker-karma/CrackerAnalysis";
@@ -11,10 +11,9 @@ import CrackerScanner, {
 import ActivityTracker from "@/components/cracker-karma/ActivityTracker";
 import EcoActions from "@/components/cracker-karma/EcoActions";
 import CrackerGuide from "@/components/cracker-karma/CrackerGuide";
-import { useUser, useAuth, useFirebase } from "@/firebase";
+import { useUser, useFirebase, useDoc, useMemoFirebase } from "@/firebase";
 import { useRouter } from "next/navigation";
-import { setDocumentNonBlocking } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -31,14 +30,26 @@ export default function Home() {
   const router = useRouter();
   const { toast } = useToast();
 
+  const userDocRef = useMemoFirebase(
+    () => (user ? doc(firestore, "users", user.uid) : null),
+    [user, firestore]
+  );
+  
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userDocRef);
+
   const [budget, setBudget] = useState(1000);
 
-  // Redirect if user is not logged in
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push("/login");
     }
   }, [user, isUserLoading, router]);
+
+  useEffect(() => {
+    if (userProfile) {
+      setBudget(userProfile.budget);
+    }
+  }, [userProfile]);
 
   const handleBudgetUpdate = (amount: number, message: string) => {
     const newBudget = Math.max(0, budget + amount);
@@ -46,7 +57,7 @@ export default function Home() {
 
     if (user && firestore) {
       const userRef = doc(firestore, "users", user.uid);
-      setDocumentNonBlocking(userRef, { budget: newBudget }, { merge: true });
+      setDoc(userRef, { budget: newBudget }, { merge: true });
     }
 
     toast({
@@ -77,10 +88,10 @@ export default function Home() {
     }
   };
 
-  if (isUserLoading || !user) {
+  if (isUserLoading || isProfileLoading || !user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <p>Loading...</p>
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }

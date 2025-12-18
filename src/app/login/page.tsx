@@ -6,7 +6,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from 'firebase/auth';
-import { doc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { Leaf, Loader2, Mail, KeyRound } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, useFirebase, setDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirebase } from '@/firebase';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -73,7 +73,7 @@ export default function LoginPage() {
         const newUser = userCredential.user;
         // Create user profile in Firestore
         const userRef = doc(firestore, 'users', newUser.uid);
-        await setDocumentNonBlocking(
+        await setDoc(
           userRef,
           {
             id: newUser.uid,
