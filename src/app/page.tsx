@@ -1,34 +1,89 @@
 "use client";
 
-import { useState } from "react";
-import { Sparkles, Leaf } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Leaf, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import BudgetDisplay from "@/components/cracker-karma/BudgetDisplay";
 import CrackerAnalysis from "@/components/cracker-karma/CrackerAnalysis";
-import CrackerScanner, { type CrackerAnalysisResult } from "@/components/cracker-karma/CrackerScanner";
+import CrackerScanner, {
+  type CrackerAnalysisResult,
+} from "@/components/cracker-karma/CrackerScanner";
 import ActivityTracker from "@/components/cracker-karma/ActivityTracker";
 import EcoActions from "@/components/cracker-karma/EcoActions";
 import CrackerGuide from "@/components/cracker-karma/CrackerGuide";
+import { useUser, useAuth, useFirebase } from "@/firebase";
+import { useRouter } from "next/navigation";
+import { setDocumentNonBlocking } from "@/firebase";
+import { doc } from "firebase/firestore";
+import { signOut } from "firebase/auth";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+type UserProfile = {
+  id: string;
+  email: string;
+  budget: number;
+  theme: "light" | "dark" | "system";
+};
 
 export default function Home() {
-  const [budget, setBudget] = useState(1000);
+  const { user, isUserLoading } = useUser();
+  const { firestore, auth } = useFirebase();
+  const router = useRouter();
   const { toast } = useToast();
 
+  const [budget, setBudget] = useState(1000);
+
+  // Redirect if user is not logged in
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, isUserLoading, router]);
+
   const handleBudgetUpdate = (amount: number, message: string) => {
-    setBudget((prev) => Math.max(0, prev + amount));
+    const newBudget = Math.max(0, budget + amount);
+    setBudget(newBudget);
+
+    if (user && firestore) {
+      const userRef = doc(firestore, "users", user.uid);
+      setDocumentNonBlocking(userRef, { budget: newBudget }, { merge: true });
+    }
+
     toast({
       title: message,
-      description: `Your budget is now ${Math.max(
-        0,
-        budget + amount
-      ).toLocaleString()} points.`,
+      description: `Your budget is now ${newBudget.toLocaleString()} points.`,
       duration: 3000,
     });
   };
 
   const handleCrackerAnalysisComplete = (result: CrackerAnalysisResult) => {
-    handleBudgetUpdate(result.pollutionPoints, `Cracker Analyzed: ${result.crackerName}`);
+    handleBudgetUpdate(
+      result.pollutionPoints,
+      `Cracker Analyzed: ${result.crackerName}`
+    );
   };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push("/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast({
+        variant: "destructive",
+        title: "Logout Failed",
+        description: "Could not log you out. Please try again.",
+      });
+    }
+  };
+
+  if (isUserLoading || !user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -41,6 +96,16 @@ export default function Home() {
                 Cracker Karma
               </h1>
             </div>
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -50,7 +115,9 @@ export default function Home() {
           <div className="lg:col-span-2 space-y-8">
             <BudgetDisplay budget={budget} />
             <CrackerAnalysis />
-            <CrackerScanner onAnalysisComplete={handleCrackerAnalysisComplete} />
+            <CrackerScanner
+              onAnalysisComplete={handleCrackerAnalysisComplete}
+            />
           </div>
           <div className="space-y-8">
             <ActivityTracker />
@@ -65,7 +132,9 @@ export default function Home() {
 
       <footer className="py-6 border-t mt-8">
         <div className="container mx-auto text-center text-muted-foreground text-sm">
-          <p>&copy; {new Date().getFullYear()} Cracker Karma. Burst responsibly.</p>
+          <p>
+            &copy; {new Date().getFullYear()} Cracker Karma. Burst responsibly.
+          </p>
         </div>
       </footer>
     </div>
