@@ -1,0 +1,73 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the Cracker Karma application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user.",
+          "format": "uuid"
+        },
+        "username": {
+          "type": "string",
+          "description": "The username of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "registrationDate": {
+          "type": "string",
+          "description": "The date and time the user registered.",
+          "format": "date-time"
+        },
+        "lastLogin": {
+          "type": "string",
+          "description": "The last date and time the user logged in.",
+          "format": "date-time"
+        },
+        "isDarkMode": {
+          "type": "boolean",
+          "description": "Indicates whether the user prefers dark mode."
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email",
+        "registrationDate"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information. Path-based ownership ensures that only the user can access their profile. Includes fields such as username, email, registrationDate, lastLogin, and isDarkMode.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure prioritizes user-specific data isolation and authorization independence. User profiles and their associated data are stored under the `/users/{userId}` path, ensuring that each user's data is separate and only accessible to them. The `users/{userId}/crackerData` subcollection stores the pollution data and cracker budget information. This design eliminates the need for complex `get()` calls in security rules, as all authorization is based on the user's `uid` and path-based ownership. The `roles_admin/{uid}` collection is used to assign admin roles, which can be checked using document existence in security rules. This structure supports QAPs by enabling secure `list` operations within each user's data and by segregating admin role management into a dedicated collection. The denormalization strategy involves storing all relevant user data within their specific path, avoiding dependencies on parent documents for authorization."
+  }
+}

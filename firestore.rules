@@ -1,0 +1,99 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model. All user-specific
+ * data is isolated under a dedicated path, `/users/{userId}`, ensuring that users can only
+ * ever access their own information.
+ *
+ * Data Structure: The entire data model is hierarchical, starting with the top-level
+ * `/users` collection. Each document within this collection represents a single user and
+ * serves as the root for all of that user's data.
+ *
+ * Key Security Decisions:
+ * - User data is completely private. A user can read, write, and delete their own
+ *   user profile document, but cannot access anyone else's.
+ * - Listing all users is explicitly disallowed to protect user privacy and prevent
+ *   data enumeration attacks.
+ * - The default security posture is to deny all access unless an explicit rule
+ *   grants it to the document owner.
+ *
+ * Denormalization for Authorization: Authorization is based on the path parameter `{userId}`.
+ * To ensure data integrity, the `id` field within a user's document must match the
+ * document's ID (`userId`) upon creation and cannot be changed thereafter. This avoids
+ * extra reads and keeps the authorization logic simple and performant.
+ *
+ * Structural Segregation: This model does not contain public or shared data, so all
+ * collections are private and secured using the same ownership pattern.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------------
+    // Helper Functions
+    // ----------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the authenticated user's UID matches the requested userId.
+     * This is the fundamental rule for user-owned data.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks for ownership on an existing document. Used for update and delete
+     * operations to prevent acting on non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Validates that the 'id' field of a new user document matches the
+     * document's ID (the user's auth UID). This enforces data consistency.
+     */
+    function hasValidUserIdOnCreate(userId) {
+      return request.resource.data.id == userId;
+    }
+
+    /**
+     * Enforces that the 'id' field is immutable. This critical field, once set,
+     * should never be changed as it links the document to the user.
+     */
+    function isUserIdImmutable() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    // ----------------------------------------------------------------------
+    // Collection Rules
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Controls access to a user's profile document.
+     * @path /users/{userId}
+     * @allow A signed-in user (uid: 'user123') can (create) their own profile at `/users/user123`.
+     * @deny A signed-in user (uid: 'user456') cannot (get) another user's profile at `/users/user123`.
+     * @principle Restricts access to a user's own data tree and enforces relational integrity.
+     */
+    match /users/{userId} {
+      // READ: Users can get their own profile. Listing is allowed for potential future subcollections.
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+
+      // WRITE: A user can create their own profile, but the document's internal `id` must match their UID.
+      allow create: if isOwner(userId) && hasValidUserIdOnCreate(userId);
+
+      // WRITE: A user can update their own profile, but cannot change the immutable `id` field.
+      allow update: if isExistingOwner(userId) && isUserIdImmutable();
+
+      // WRITE: A user can delete their own profile document.
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}
