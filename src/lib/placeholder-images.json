@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "cracker-sparkler",
+      "description": "A handheld sparkler that emits bright sparks.",
+      "imageUrl": "https://images.unsplash.com/photo-1589284718693-5eafd4ec968b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzcGFya2xlciUyMGZpcmV3b3JrfGVufDB8fHx8MTc2NjA2Mjk5OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sparkler firework"
+    },
+    {
+      "id": "cracker-fountain",
+      "description": "A ground-based fountain that shoots colorful sparks upwards.",
+      "imageUrl": "https://images.unsplash.com/photo-1625456809070-da1680787f5c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmb3VudGFpbiUyMGZpcmV3b3JrfGVufDB8fHx8MTc2NjA2Mjk5OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fountain firework"
+    },
+    {
+      "id": "cracker-rocket",
+      "description": "A sky rocket that launches into the air and explodes.",
+      "imageUrl": "https://images.unsplash.com/photo-1642472327715-1d81a59f57eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxyb2NrZXQlMjBmaXJld29ya3xlbnwwfHx8fDE3NjYwNjI5OTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "rocket firework"
+    },
+    {
+      "id": "cracker-wheel",
+      "description": "A spinning wheel that creates a circular shower of sparks.",
+      "imageUrl": "https://images.unsplash.com/photo-1677503254700-723f75cba286?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzcGlubmluZyUyMGZpcmV3b3JrfGVufDB8fHx8MTc2NjA2Mjk5OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "spinning firework"
+    }
+  ]
 }
