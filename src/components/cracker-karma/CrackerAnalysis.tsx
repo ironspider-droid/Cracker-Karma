@@ -14,23 +14,12 @@ export type AnalysisResult = {
   recommendation: string;
 };
 
-type CrackerAnalysisProps = {
-  onAnalysisComplete: (result: AnalysisResult, adjustment: number) => void;
-};
-
-export default function CrackerAnalysis({ onAnalysisComplete }: CrackerAnalysisProps) {
+export default function CrackerAnalysis() {
   const [location, setLocation] = useState<string>("Delhi");
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-
-  const parseBudgetAdjustment = (aqi: number): number => {
-    if (aqi > 150) return -200; // Unhealthy
-    if (aqi > 100) return -100; // Moderate
-    if (aqi > 50) return -25; // Sensitive groups
-    return 0; // Good
-  };
 
   const handleAnalyze = async () => {
     if (!location) {
@@ -50,8 +39,10 @@ export default function CrackerAnalysis({ onAnalysisComplete }: CrackerAnalysisP
 
     if (result.success) {
       setAnalysisResult(result.data);
-      const adjustment = parseBudgetAdjustment(result.data.aqi);
-      onAnalysisComplete(result.data, adjustment);
+      toast({
+        title: "Air Quality Checked!",
+        description: `Current AQI in ${result.data.city} is ${result.data.aqi}.`,
+      });
     } else {
       setError(result.error);
       toast({
@@ -71,7 +62,7 @@ export default function CrackerAnalysis({ onAnalysisComplete }: CrackerAnalysisP
           Air Quality Check
         </CardTitle>
         <CardDescription>
-          Enter a city to check the current air quality and its impact on your budget.
+          Enter a city to check the current air quality. This won't affect your budget.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
